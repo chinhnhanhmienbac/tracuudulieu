@@ -505,20 +505,20 @@
     </footer>
 
     <script>
-        // Firebase configuration (thay thế bằng config của bạn)
+        Firebase configuration (thay thế bằng config của bạn)
         const firebaseConfig = {
-            apiKey: "AIzaSyEXAMPLEAPIKEY",
-            authDomain: "your-project.firebaseapp.com",
-            databaseURL: "https://your-project-default-rtdb.firebaseio.com",
-            projectId: "your-project",
-            storageBucket: "your-project.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:exampleappid"
+            apiKey: "AIzaSyAzxUEIUe0FYHAn7nO-AOWfcmor66yZuy0",
+            authDomain: "cnmblpg.firebaseapp.com",
+            databaseURL: "https://cnmblpg-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "cnmblpg",
+            storageBucket: "cnmblpg.firebasestorage.app",
+            messagingSenderId: "932026549328",
+            appId: "1:932026549328:web:596a05ade7ba7742b57d55"
         };
         
         // Khởi tạo Firebase
-        // firebase.initializeApp(firebaseConfig);
-        // const database = firebase.database();
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
         
         // Dữ liệu mẫu (trong thực tế sẽ đọc/ghi từ Firebase)
         let serialRanges = JSON.parse(localStorage.getItem('serialRanges')) || [
