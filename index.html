@@ -794,7 +794,7 @@
             console.log("Dữ liệu đã được lưu vào localStorage");
             
             // Code để lưu lên Firebase (bỏ comment khi đã cấu hình Firebase)
-            /*
+            
             database.ref('serialRanges').set(serialRanges)
                 .then(() => {
                     console.log("Dữ liệu đã được lưu lên Firebase");
@@ -802,13 +802,13 @@
                 .catch((error) => {
                     console.error("Lỗi khi lưu dữ liệu lên Firebase:", error);
                 });
-            */
+            
         }
         
         // Hàm tải dữ liệu (trong thực tế sẽ tải từ Firebase)
         function loadData() {
             // Code để tải từ Firebase (bỏ comment khi đã cấu hình Firebase)
-            /*
+            
             database.ref('serialRanges').once('value')
                 .then((snapshot) => {
                     const data = snapshot.val();
@@ -822,7 +822,7 @@
                     console.error("Lỗi khi tải dữ liệu từ Firebase:", error);
                     loadDataTable();
                 });
-            */
+            
             
             // Tạm thời chỉ tải từ localStorage
             loadDataTable();
