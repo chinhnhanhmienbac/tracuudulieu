@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Tra Cứu Dữ Liệu Nâng Cao</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--dark-color));
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin-bottom: 25px;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        .card-title {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-color);
+            font-size: 1.5rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: var(--secondary-color);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        
+        .btn-accent {
+            background: var(--accent-color);
+        }
+        
+        .btn-accent:hover {
+            background: #c0392b;
+        }
+        
+        .btn-success {
+            background: var(--success-color);
+        }
+        
+        .btn-success:hover {
+            background: #219653;
+        }
+        
+        .btn-warning {
+            background: var(--warning-color);
+        }
+        
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border 0.3s ease;
+        }
+        
+        input:focus, select:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .result-box {
+            background: var(--light-color);
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .result-box h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #777;
+        }
+        
+        .qr-scanner {
+            width: 100%;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        #qr-video {
+            width: 100%;
+            border-radius: 5px;
+            background: #000;
+        }
+        
+        .camera-container {
+            position: relative;
+            margin-bottom: 15px;
+            height: 300px;
+            overflow: hidden;
+        }
+        
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: var(--accent-color);
+            animation: scan 2s infinite linear;
+        }
+        
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .data-table th, .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .data-table th {
+            background: var(--light-color);
+            font-weight: 600;
+        }
+        
+        .data-table tr:hover {
+            background: #f9f9f9;
+        }
+        
+        .notification {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .range-inputs {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .range-inputs .form-group {
+            flex: 1;
+        }
+        
+        .file-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .file-upload:hover {
+            border-color: var(--secondary-color);
+            background: rgba(52, 152, 219, 0.05);
+        }
+        
+        .file-upload i {
+            font-size: 3rem;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+        }
+        
+        #file-name {
+            margin-top: 10px;
+            font-style: italic;
+            color: #777;
+        }
+        
+        .qr-result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            color: #777;
+            border-top: 1px solid #ddd;
+        }
+        
+        @media (max-width: 768px) {
+            .card {
+                padding: 15px;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-right: 0;
+            }
+            
+            .range-inputs {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><i class="fas fa-database"></i> Hệ Thống Tra Cứu Dữ Liệu Nâng Cao</h1>
+            <p>Nhập liệu theo dải serial và tra cứu thông tin dễ dàng</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2 class="card-title">Tra Cứu Thông Tin</h2>
+            <div class="form-group">
+                <label for="serial-input">Nhập số serial:</label>
+                <input type="text" id="serial-input" placeholder="Ví dụ: 1000000001">
+            </div>
+            <button class="btn" id="lookup-btn"><i class="fas fa-search"></i> Tra Cứu</button>
+            <button class="btn btn-accent" id="scan-qr-btn"><i class="fas fa-qrcode"></i> Quét Mã QR</button>
+            <button class="btn btn-warning" id="upload-qr-btn"><i class="fas fa-file-image"></i> Tải Ảnh QR</button>
+            
+            <div class="result-box" id="result-box">
+                <h3>Thông Tin Tra Cứu</h3>
+                <div class="result-item">
+                    <span><strong>Số serial:</strong></span>
+                    <span id="result-serial">1234567890</span>
+                </div>
+                <div class="result-item">
+                    <span><strong>Ngày đăng ký:</strong></span>
+                    <span id="result-date">01/01/2023</span>
+                </div>
+                <div class="result-item">
+                    <span><strong>Trạng thái:</strong></span>
+                    <span id="result-status">Hợp lệ</span>
+                </div>
+            </div>
+        </div>
+        
+        <button class="btn" id="data-entry-btn"><i class="fas fa-pencil-alt"></i> Truy Cập Phần Nhập Liệu</button>
+        <button class="btn btn-success" id="export-btn"><i class="fas fa-file-excel"></i> Xuất Excel</button>
+    </div>
+
+    <!-- Modal Nhập Liệu -->
+    <div class="modal" id="login-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 class="card-title">Đăng Nhập Nhập Liệu</h2>
+            <div class="form-group">
+                <label for="username">Tên đăng nhập:</label>
+                <input type="text" id="username" placeholder="Nhập username">
+            </div>
+            <div class="form-group">
+                <label for="password">Mật khẩu:</label>
+                <input type="password" id="password" placeholder="Nhập mật khẩu">
+            </div>
+            <button class="btn" id="login-btn">Đăng Nhập</button>
+        </div>
+    </div>
+
+    <!-- Modal Nhập Liệu -->
+    <div class="modal" id="data-entry-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 class="card-title">Nhập Liệu Dải Serial</h2>
+            
+            <div class="range-inputs">
+                <div class="form-group">
+                    <label for="start-serial">Số bắt đầu:</label>
+                    <input type="number" id="start-serial" placeholder="Số bắt đầu">
+                </div>
+                <div class="form-group">
+                    <label for="end-serial">Số kết thúc:</label>
+                    <input type="number" id="end-serial" placeholder="Số kết thúc">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="assigned-date">Ngày áp dụng:</label>
+                <input type="date" id="assigned-date">
+            </div>
+            
+            <button class="btn" id="add-range-btn">Thêm Dải Serial</button>
+            <button class="btn btn-accent" id="clear-all-btn">Xóa Tất Cả</button>
+            
+            <h3 style="margin-top: 30px;">Dữ liệu đã nhập</h3>
+            <div style="max-height: 300px; overflow-y: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Ngày</th>
+                            <th>Số bắt đầu</th>
+                            <th>Số kết thúc</th>
+                            <th>Số lượng</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data-table-body">
+                        <!-- Dữ liệu sẽ được thêm ở đây bằng JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Quét QR -->
+    <div class="modal" id="qr-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 class="card-title">Quét Mã QR</h2>
+            <div class="qr-scanner">
+                <div class="camera-container">
+                    <video id="qr-video"></video>
+                    <div class="scan-line"></div>
+                </div>
+                <p>Đưa mã QR vào trước camera</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tải ảnh QR -->
+    <div class="modal" id="upload-qr-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 class="card-title">Quét Mã QR Từ Ảnh</h2>
+            
+            <div class="file-upload" id="file-upload-area">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Nhấp để chọn file ảnh hoặc kéo thả ảnh vào đây</p>
+                <input type="file" id="file-input" accept="image/*" style="display: none;">
+                <div id="file-name"></div>
+            </div>
+            
+            <div id="upload-result"></div>
+            
+            <div class="qr-result" id="qr-result">
+                <h3>Kết quả quét mã QR</h3>
+                <div class="form-group">
+                    <label for="extracted-serial">Serial trích xuất:</label>
+                    <input type="text" id="extracted-serial" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="qr-raw-data">Dữ liệu gốc:</label>
+                    <textarea id="qr-raw-data" rows="3" readonly style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd;"></textarea>
+                </div>
+                <button class="btn btn-success" id="accept-serial-btn">Chấp nhận serial</button>
+                <button class="btn btn-accent" id="try-again-btn">Thử lại</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>Hệ thống tra cứu dữ liệu © 2023 - Phát triển bởi Team Developer</p>
+        </div>
+    </footer>
+
+    <script>
+        // Firebase configuration (thay thế bằng config của bạn)
+        const firebaseConfig = {
+            apiKey: "AIzaSyEXAMPLEAPIKEY",
+            authDomain: "your-project.firebaseapp.com",
+            databaseURL: "https://your-project-default-rtdb.firebaseio.com",
+            projectId: "your-project",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:exampleappid"
+        };
+        
+        // Khởi tạo Firebase
+        // firebase.initializeApp(firebaseConfig);
+        // const database = firebase.database();
+        
+        // Dữ liệu mẫu (trong thực tế sẽ đọc/ghi từ Firebase)
+        let serialRanges = JSON.parse(localStorage.getItem('serialRanges')) || [
+            { start: "1000000001", end: "1000000005", date: "2023-01-15" },
+            { start: "1000000010", end: "1000000015", date: "2023-02-20" }
+        ];
+
+        // DOM Elements
+        const dataEntryBtn = document.getElementById('data-entry-btn');
+        const loginModal = document.getElementById('login-modal');
+        const dataEntryModal = document.getElementById('data-entry-modal');
+        const qrModal = document.getElementById('qr-modal');
+        const uploadQrModal = document.getElementById('upload-qr-modal');
+        const closeModalButtons = document.querySelectorAll('.close-modal');
+        const loginBtn = document.getElementById('login-btn');
+        const lookupBtn = document.getElementById('lookup-btn');
+        const scanQrBtn = document.getElementById('scan-qr-btn');
+        const uploadQrBtn = document.getElementById('upload-qr-btn');
+        const addRangeBtn = document.getElementById('add-range-btn');
+        const clearAllBtn = document.getElementById('clear-all-btn');
+        const exportBtn = document.getElementById('export-btn');
+        const resultBox = document.getElementById('result-box');
+        const fileUploadArea = document.getElementById('file-upload-area');
+        const fileInput = document.getElementById('file-input');
+        const fileName = document.getElementById('file-name');
+        const uploadResult = document.getElementById('upload-result');
+        const qrResult = document.getElementById('qr-result');
+        const extractedSerial = document.getElementById('extracted-serial');
+        const qrRawData = document.getElementById('qr-raw-data');
+        const acceptSerialBtn = document.getElementById('accept-serial-btn');
+        const tryAgainBtn = document.getElementById('try-again-btn');
+        
+        // Hiển thị modal đăng nhập khi nhấn nút nhập liệu
+        dataEntryBtn.addEventListener('click', () => {
+            loginModal.style.display = 'flex';
+        });
+        
+        // Mở modal upload QR
+        uploadQrBtn.addEventListener('click', () => {
+            uploadQrModal.style.display = 'flex';
+            uploadResult.innerHTML = '';
+            fileName.textContent = '';
+            qrResult.style.display = 'none';
+        });
+        
+        // Đóng modal khi nhấn nút đóng
+        closeModalButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                loginModal.style.display = 'none';
+                dataEntryModal.style.display = 'none';
+                qrModal.style.display = 'none';
+                uploadQrModal.style.display = 'none';
+                stopCamera();
+            });
+        });
+        
+        // Xử lý đăng nhập
+        loginBtn.addEventListener('click', () => {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === 'Admin' && password === '12345') {
+                loginModal.style.display = 'none';
+                dataEntryModal.style.display = 'flex';
+                loadDataTable();
+            } else {
+                alert('Tên đăng nhập hoặc mật khẩu không đúng!');
+            }
+        });
+        
+        // Thêm dải serial
+        addRangeBtn.addEventListener('click', () => {
+            const startSerial = document.getElementById('start-serial').value;
+            const endSerial = document.getElementById('end-serial').value;
+            const date = document.getElementById('assigned-date').value;
+            
+            if (!startSerial || !endSerial || !date) {
+                alert('Vui lòng nhập đầy đủ thông tin!');
+                return;
+            }
+            
+            if (parseInt(startSerial) > parseInt(endSerial)) {
+                alert('Số bắt đầu phải nhỏ hơn hoặc bằng số kết thúc!');
+                return;
+            }
+            
+            // Thêm dải serial mới
+            serialRanges.push({ start: startSerial, end: endSerial, date: date });
+            saveData();
+            loadDataTable();
+            
+            // Reset form
+            document.getElementById('start-serial').value = '';
+            document.getElementById('end-serial').value = '';
+            document.getElementById('assigned-date').value = '';
+            
+            alert(`Đã thêm dải serial từ ${startSerial} đến ${endSerial}!`);
+        });
+        
+        // Xóa tất cả dữ liệu
+        clearAllBtn.addEventListener('click', () => {
+            if (confirm('Bạn có chắc chắn muốn xóa TẤT CẢ dữ liệu? Thao tác này không thể hoàn tác!')) {
+                serialRanges = [];
+                saveData();
+                loadDataTable();
+                alert('Đã xóa tất cả dữ liệu!');
+            }
+        });
+        
+        // Xuất dữ liệu ra Excel
+        exportBtn.addEventListener('click', () => {
+            if (serialRanges.length === 0) {
+                alert('Không có dữ liệu để xuất!');
+                return;
+            }
+            
+            // Chuẩn bị dữ liệu cho Excel
+            const worksheet = XLSX.utils.json_to_sheet(serialRanges.map(range => ({
+                'Ngày Áp Dụng': formatDate(range.date),
+                'Số Bắt Đầu': range.start,
+                'Số Kết Thúc': range.end,
+                'Số Lượng': parseInt(range.end) - parseInt(range.start) + 1
+            })));
+            
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Dải Serial');
+            
+            // Xuất file
+            XLSX.writeFile(workbook, 'danh_sach_serial.xlsx');
+        });
+        
+        // Tra cứu thông tin
+        lookupBtn.addEventListener('click', () => {
+            const serialInput = document.getElementById('serial-input').value;
+            if (!serialInput) {
+                alert('Vui lòng nhập số serial!');
+                return;
+            }
+            
+            const foundRange = serialRanges.find(range => 
+                parseInt(serialInput) >= parseInt(range.start) && 
+                parseInt(serialInput) <= parseInt(range.end)
+            );
+            
+            if (foundRange) {
+                document.getElementById('result-serial').textContent = serialInput;
+                document.getElementById('result-date').textContent = formatDate(foundRange.date);
+                document.getElementById('result-status').textContent = 'Hợp lệ';
+                resultBox.style.display = 'block';
+            } else {
+                document.getElementById('result-serial').textContent = serialInput;
+                document.getElementById('result-date').textContent = 'N/A';
+                document.getElementById('result-status').textContent = 'Không hợp lệ';
+                resultBox.style.display = 'block';
+            }
+        });
+        
+        // Mở modal quét QR
+        scanQrBtn.addEventListener('click', () => {
+            qrModal.style.display = 'flex';
+            startCamera();
+        });
+        
+        // Xử lý upload file ảnh QR
+        fileUploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.style.borderColor = '#3498db';
+            fileUploadArea.style.backgroundColor = 'rgba(52, 152, 219, 0.1)';
+        });
+        
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.style.borderColor = '#ddd';
+            fileUploadArea.style.backgroundColor = 'transparent';
+        });
+        
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (e.dataTransfer.files.length) {
+                handleQRImage(e.dataTransfer.files[0]);
+            }
+            fileUploadArea.style.borderColor = '#ddd';
+            fileUploadArea.style.backgroundColor = 'transparent';
+        });
+        
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) {
+                handleQRImage(fileInput.files[0]);
+            }
+        });
+        
+        // Chấp nhận serial từ QR
+        acceptSerialBtn.addEventListener('click', () => {
+            document.getElementById('serial-input').value = extractedSerial.value;
+            uploadQrModal.style.display = 'none';
+            lookupBtn.click();
+        });
+        
+        // Thử lại quét QR
+        tryAgainBtn.addEventListener('click', () => {
+            qrResult.style.display = 'none';
+            uploadResult.innerHTML = '';
+            fileName.textContent = '';
+            fileInput.value = '';
+        });
+        
+        // Hàm xử lý ảnh QR
+        function handleQRImage(file) {
+            if (!file.type.match('image.*')) {
+                uploadResult.innerHTML = '<div class="notification error">File phải là hình ảnh!</div>';
+                return;
+            }
+            
+            fileName.textContent = file.name;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // Tạo canvas để xử lý ảnh
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // Nhận diện QR code
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height);
+                    
+                    if (code) {
+                        const rawData = code.data;
+                        qrRawData.value = rawData;
+                        
+                        // Trích xuất số serial từ dữ liệu QR
+                        const serial = extractSerialFromQR(rawData);
+                        extractedSerial.value = serial;
+                        
+                        uploadResult.innerHTML = '<div class="notification success">Đã quét mã QR thành công!</div>';
+                        qrResult.style.display = 'block';
+                    } else {
+                        uploadResult.innerHTML = '<div class="notification error">Không tìm thấy mã QR trong ảnh!</div>';
+                        qrResult.style.display = 'none';
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Hàm trích xuất số serial từ dữ liệu QR
+        function extractSerialFromQR(data) {
+            // Tìm số có độ dài từ 8 đến 15 chữ số (có thể điều chỉnh theo nhu cầu)
+            const serialRegex = /\b\d{8,15}\b/g;
+            const matches = data.match(serialRegex);
+            
+            if (matches && matches.length > 0) {
+                // Trả về số đầu tiên tìm thấy (có thể điều chỉnh logic theo nhu cầu)
+                return matches[0];
+            }
+            
+            // Nếu không tìm thấy số, trả về toàn bộ dữ liệu
+            return data;
+        }
+        
+        // Hàm lưu dữ liệu (trong thực tế sẽ lưu lên Firebase)
+        function saveData() {
+            localStorage.setItem('serialRanges', JSON.stringify(serialRanges));
+            console.log("Dữ liệu đã được lưu vào localStorage");
+            
+            // Code để lưu lên Firebase (bỏ comment khi đã cấu hình Firebase)
+            /*
+            database.ref('serialRanges').set(serialRanges)
+                .then(() => {
+                    console.log("Dữ liệu đã được lưu lên Firebase");
+                })
+                .catch((error) => {
+                    console.error("Lỗi khi lưu dữ liệu lên Firebase:", error);
+                });
+            */
+        }
+        
+        // Hàm tải dữ liệu (trong thực tế sẽ tải từ Firebase)
+        function loadData() {
+            // Code để tải từ Firebase (bỏ comment khi đã cấu hình Firebase)
+            /*
+            database.ref('serialRanges').once('value')
+                .then((snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        serialRanges = data;
+                        console.log("Dữ liệu đã được tải từ Firebase");
+                    }
+                    loadDataTable();
+                })
+                .catch((error) => {
+                    console.error("Lỗi khi tải dữ liệu từ Firebase:", error);
+                    loadDataTable();
+                });
+            */
+            
+            // Tạm thời chỉ tải từ localStorage
+            loadDataTable();
+        }
+        
+        // Hàm tải dữ liệu vào bảng
+        function loadDataTable() {
+            const tableBody = document.getElementById('data-table-body');
+            tableBody.innerHTML = '';
+            
+            serialRanges.forEach((range, index) => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${formatDate(range.date)}</td>
+                    <td>${range.start}</td>
+                    <td>${range.end}</td>
+                    <td>${parseInt(range.end) - parseInt(range.start) + 1}</td>
+                    <td>
+                        <button class="btn" onclick="deleteRange(${index})">Xóa</button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Hàm xóa dải serial
+        function deleteRange(index) {
+            if (confirm('Bạn có chắc chắn muốn xóa dải serial này?')) {
+                serialRanges.splice(index, 1);
+                saveData();
+                loadDataTable();
+            }
+        }
+        
+        // Hàm định dạng ngày
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('vi-VN');
+        }
+        
+        // Hàm bật camera để quét QR
+        function startCamera() {
+            const video = document.getElementById('qr-video');
+            
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                    .then(function(stream) {
+                        video.srcObject = stream;
+                        video.setAttribute("playsinline", true);
+                        video.play();
+                        
+                        // Bắt đầu nhận diện QR
+                        requestAnimationFrame(tick);
+                    })
+                    .catch(function(err) {
+                        console.error("Lỗi khi truy cập camera: ", err);
+                        alert("Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.");
+                    });
+            } else {
+                alert("Trình duyệt của bạn không hỗ trợ truy cập camera.");
+            }
+        }
+        
+        // Hàm dừng camera
+        function stopCamera() {
+            const video = document.getElementById('qr-video');
+            if (video.srcObject) {
+                const tracks = video.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                video.srcObject = null;
+            }
+        }
+        
+        // Hàm nhận diện QR
+        function tick() {
+            const video = document.getElementById('qr-video');
+            
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                
+                if (code) {
+                    const serial = extractSerialFromQR(code.data);
+                    document.getElementById('serial-input').value = serial;
+                    qrModal.style.display = 'none';
+                    stopCamera();
+                    
+                    // Tự động tra cứu sau khi quét QR
+                    setTimeout(() => {
+                        lookupBtn.click();
+                    }, 300);
+                }
+            }
+            
+            if (qrModal.style.display === 'flex') {
+                requestAnimationFrame(tick);
+            }
+        }
+        
+        // Tải dữ liệu khi khởi động
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Trang web đã được tải');
+            loadData();
+        });
+        
+        // Đóng modal khi click bên ngoài
+        window.addEventListener('click', (e) => {
+            if (e.target === loginModal) loginModal.style.display = 'none';
+            if (e.target === dataEntryModal) dataEntryModal.style.display = 'none';
+            if (e.target === qrModal) {
+                qrModal.style.display = 'none';
+                stopCamera();
+            }
+            if (e.target === uploadQrModal) uploadQrModal.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
