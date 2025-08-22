@@ -19,7 +19,7 @@
             color: #333;
         }
 
-        .container {
+       .container {
             background-color: #ffffff;
             padding: 40px;
             border-radius: 12px;
@@ -35,7 +35,7 @@
             margin-bottom: 20px;
         }
 
-        .section {
+       .section {
             padding: 20px;
             margin-top: 20px;
             border: 1px solid #e0e0e0;
@@ -43,19 +43,19 @@
             background-color: #fafafa;
         }
 
-        .form-group {
+       .form-group {
             margin-bottom: 15px;
             text-align: left;
         }
 
-        .form-group label {
+       .form-group label {
             display: block;
             margin-bottom: 5px;
             font-weight: 600;
             color: #555;
         }
 
-        .form-group input {
+       .form-group input {
             width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
@@ -76,15 +76,23 @@
             margin-top: 10px;
         }
         
+        button#delete-button {
+            background-color: #e74c3c;
+        }
+
+        button#delete-button:hover {
+            background-color: #c0392b;
+        }
+
         button:hover {
             background-color: #2980b9;
         }
 
-        .hidden {
+       .hidden {
             display: none;
         }
 
-        .result-box {
+       .result-box {
             margin-top: 20px;
             padding: 15px;
             background-color: #e8f5e9;
@@ -93,7 +101,7 @@
             text-align: left;
         }
 
-        .error-box {
+       .error-box {
             margin-top: 20px;
             padding: 15px;
             background-color: #ffebee;
@@ -102,14 +110,22 @@
             text-align: left;
         }
 
-        .status-message {
+       .status-message {
             margin-top: 15px;
             font-weight: bold;
             color: #27ae60;
         }
+        
+       .edit-record {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #ffffff;
+        }
 
         @media (max-width: 600px) {
-            .container {
+           .container {
                 padding: 20px;
             }
         }
@@ -141,7 +157,7 @@
         </div>
         <div class="form-group">
             <label for="password">Mật khẩu:</label>
-            <input type="password" id="password" placeholder="Nhập mật khẩu">
+            <input type="password" id="password" placeholder="Mật khẩu">
         </div>
         <button id="login-button">Đăng nhập</button>
         <div id="login-error" class="error-box hidden"></div>
@@ -165,11 +181,27 @@
             <label for="location-input">Địa điểm:</label>
             <input type="text" id="location-input" placeholder="Ví dụ: Hà Nội">
         </div>
-        <button id="save-button">Lưu dữ liệu</button>
-        <button id="export-button">Xuất ra Excel</button>
+        <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+            <button id="save-button">Lưu dữ liệu</button>
+            <button id="export-button">Xuất ra Excel</button>
+            <button id="delete-button">Xóa dữ liệu</button>
+            <button id="open-edit-button">Chỉnh sửa dữ liệu</button>
+        </div>
         <button id="logout-button">Đóng phần nhập liệu</button>
         <div id="save-status" class="status-message"></div>
     </div>
+
+    <div id="edit-section" class="section hidden">
+        <h2>Chỉnh sửa Dữ liệu theo Ngày</h2>
+        <div class="form-group">
+            <label for="edit-date-input">Chọn ngày để sửa:</label>
+            <input type="date" id="edit-date-input">
+        </div>
+        <button id="load-edit-data-button">Hiển thị bản ghi</button>
+        <div id="edit-records-container"></div>
+        <button id="back-to-entry-button" style="margin-top: 20px;">Quay lại trang nhập liệu</button>
+    </div>
+
 </div>
 
 <script>
@@ -194,11 +226,17 @@
     const loginSection = document.getElementById('login-section');
     const dataEntrySection = document.getElementById('data-entry-section');
     const lookupSection = document.getElementById('lookup-section');
+    const editSection = document.getElementById('edit-section'); // Thêm phần edit
+    
     const openDataEntryButton = document.getElementById('open-data-entry-button');
     const loginButton = document.getElementById('login-button');
     const logoutButton = document.getElementById('logout-button');
     const saveButton = document.getElementById('save-button');
     const exportButton = document.getElementById('export-button');
+    const deleteButton = document.getElementById('delete-button');
+    const openEditButton = document.getElementById('open-edit-button'); // Nút mở sửa đổi
+    const loadEditDataButton = document.getElementById('load-edit-data-button'); // Nút tải dữ liệu sửa đổi
+    const backToEntryButton = document.getElementById('back-to-entry-button'); // Nút quay lại
     const lookupButton = document.getElementById('lookup-button');
 
     const usernameInput = document.getElementById('username');
@@ -214,12 +252,16 @@
     const serialInput = document.getElementById('serial-input');
     const lookupResult = document.getElementById('lookup-result');
     const lookupError = document.getElementById('lookup-error');
+    
+    const editDateInput = document.getElementById('edit-date-input'); // Input ngày sửa đổi
+    const editRecordsContainer = document.getElementById('edit-records-container'); // Container chứa các bản ghi sửa đổi
 
     // Hàm ẩn/hiện các phần
     function showLogin() {
         loginSection.classList.remove('hidden');
         dataEntrySection.classList.add('hidden');
         lookupSection.classList.add('hidden');
+        editSection.classList.add('hidden');
         openDataEntryButton.classList.add('hidden');
     }
 
@@ -227,6 +269,7 @@
         loginSection.classList.add('hidden');
         dataEntrySection.classList.remove('hidden');
         lookupSection.classList.add('hidden');
+        editSection.classList.add('hidden');
         openDataEntryButton.classList.add('hidden');
         // Reset form
         dateInput.value = '';
@@ -236,10 +279,20 @@
         saveStatus.textContent = '';
     }
 
+    function showEditSection() {
+        loginSection.classList.add('hidden');
+        dataEntrySection.classList.add('hidden');
+        lookupSection.classList.add('hidden');
+        editSection.classList.remove('hidden');
+        openDataEntryButton.classList.add('hidden');
+        editRecordsContainer.innerHTML = '';
+    }
+
     function showLookup() {
         loginSection.classList.add('hidden');
         dataEntrySection.classList.add('hidden');
         lookupSection.classList.remove('hidden');
+        editSection.classList.add('hidden');
         openDataEntryButton.classList.remove('hidden');
         // Clear result
         lookupResult.classList.add('hidden');
@@ -271,6 +324,11 @@
     logoutButton.addEventListener('click', () => {
         showLookup();
     });
+    
+    // Sự kiện quay lại trang nhập liệu từ trang sửa đổi
+    backToEntryButton.addEventListener('click', () => {
+        showDataEntry();
+    });
 
     // Sự kiện lưu dữ liệu
     saveButton.addEventListener('click', () => {
@@ -279,7 +337,7 @@
         const endSerial = parseInt(endSerialInput.value, 10);
         const location = locationInput.value;
 
-        if (date && startSerial && endSerial && location) {
+        if (date &&!isNaN(startSerial) &&!isNaN(endSerial) && location) {
             const newEntry = {
                 date: date,
                 start: startSerial,
@@ -288,36 +346,134 @@
             };
 
             dataRef.push(newEntry)
-                .then(() => {
+               .then(() => {
                     saveStatus.textContent = 'Lưu dữ liệu thành công!';
                     dateInput.value = '';
                     startSerialInput.value = '';
                     endSerialInput.value = '';
                     locationInput.value = '';
                 })
-                .catch(error => {
+               .catch(error => {
                     saveStatus.textContent = 'Lỗi: ' + error.message;
                     console.error('Lỗi khi lưu dữ liệu:', error);
                 });
         } else {
-            saveStatus.textContent = 'Vui lòng điền đầy đủ thông tin.';
+            saveStatus.textContent = 'Vui lòng điền đầy đủ và đúng định dạng thông tin.';
         }
     });
 
-    // Hàm định dạng ngày tháng sang DD/MM/YYYY
-    function formatDate(dateString) {
-        const [year, month, day] = dateString.split('-');
+    // Sự kiện xóa dữ liệu
+    deleteButton.addEventListener('click', () => {
+        const confirmPassword = prompt('Nhập mật khẩu để xóa dữ liệu:');
+        if (confirmPassword === '54321') {
+            dataRef.remove()
+               .then(() => {
+                    saveStatus.textContent = 'Tất cả dữ liệu đã được xóa thành công!';
+                })
+               .catch(error => {
+                    saveStatus.textContent = 'Lỗi khi xóa dữ liệu: ' + error.message;
+                    console.error('Lỗi khi xóa dữ liệu:', error);
+                });
+        } else {
+            alert('Mật khẩu không chính xác. Không thể xóa dữ liệu.');
+        }
+    });
+
+    // Sự kiện mở chức năng sửa đổi
+    openEditButton.addEventListener('click', () => {
+        const editPassword = prompt('Nhập mật khẩu để chỉnh sửa dữ liệu:');
+        if (editPassword === '13579') {
+            showEditSection();
+        } else {
+            alert('Mật khẩu không chính xác. Không thể truy cập chức năng chỉnh sửa.');
+        }
+    });
+
+    // Sự kiện tải dữ liệu để sửa đổi
+    loadEditDataButton.addEventListener('click', () => {
+        const selectedDate = editDateInput.value;
+        if (!selectedDate) {
+            alert('Vui lòng chọn một ngày.');
+            return;
+        }
+
+        editRecordsContainer.innerHTML = 'Đang tải...';
+
+        dataRef.orderByChild('date').equalTo(selectedDate).once('value', (snapshot) => {
+            editRecordsContainer.innerHTML = '';
+            if (snapshot.exists()) {
+                snapshot.forEach((childSnapshot) => {
+                    const key = childSnapshot.key;
+                    const data = childSnapshot.val();
+
+                    const recordDiv = document.createElement('div');
+                    recordDiv.className = 'edit-record';
+                    recordDiv.innerHTML = `
+                        <p><strong>Bản ghi:</strong> ${key}</p>
+                        <div class="form-group">
+                            <label>Số bắt đầu:</label>
+                            <input type="number" class="edit-start" value="${data.start}">
+                        </div>
+                        <div class="form-group">
+                            <label>Số kết thúc:</label>
+                            <input type="number" class="edit-end" value="${data.end}">
+                        </div>
+                        <div class="form-group">
+                            <label>Địa điểm:</label>
+                            <input type="text" class="edit-location" value="${data.location}">
+                        </div>
+                        <button class="save-edit-button" data-key="${key}">Lưu thay đổi</button>
+                    `;
+                    editRecordsContainer.appendChild(recordDiv);
+                });
+
+                // Gắn sự kiện cho các nút "Lưu thay đổi" vừa tạo
+                document.querySelectorAll('.save-edit-button').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const keyToUpdate = event.target.getAttribute('data-key');
+                        const recordDiv = event.target.closest('.edit-record');
+                        
+                        const updatedData = {
+                            start: parseInt(recordDiv.querySelector('.edit-start').value, 10),
+                            end: parseInt(recordDiv.querySelector('.edit-end').value, 10),
+                            location: recordDiv.querySelector('.edit-location').value,
+                            date: selectedDate
+                        };
+                        
+                        dataRef.child(keyToUpdate).update(updatedData)
+                           .then(() => {
+                                alert('Cập nhật thành công!');
+                            })
+                           .catch(error => {
+                                alert('Lỗi khi cập nhật: ' + error.message);
+                                console.error('Lỗi khi cập nhật:', error);
+                            });
+                    });
+                });
+            } else {
+                editRecordsContainer.innerHTML = '<p>Không tìm thấy bản ghi nào trong ngày này.</p>';
+            }
+        });
+    });
+
+    // Hàm định dạng ngày tháng sang dd/mm/yyyy
+    function formatDateForExcel(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString + 'T00:00:00'); // Add T00:00:00 to avoid timezone issues
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+        const year = date.getFullYear();
         return `${day}/${month}/${year}`;
     }
 
     // Sự kiện xuất Excel
     exportButton.addEventListener('click', () => {
         dataRef.once('value')
-            .then(snapshot => {
+           .then(snapshot => {
                 const data = snapshot.val();
                 if (data) {
                     const entries = Object.values(data).map(item => ({
-                        'Ngày': formatDate(item.date), // Định dạng ngày tháng
+                        'Ngày': formatDateForExcel(item.date),
                         'Số bắt đầu': item.start,
                         'Số kết thúc': item.end,
                         'Địa điểm': item.location
@@ -336,7 +492,7 @@
                     saveStatus.textContent = 'Không có dữ liệu để xuất.';
                 }
             })
-            .catch(error => {
+           .catch(error => {
                 saveStatus.textContent = 'Lỗi khi lấy dữ liệu để xuất Excel: ' + error.message;
                 console.error('Lỗi khi xuất Excel:', error);
             });
@@ -358,7 +514,7 @@
         lookupResult.innerHTML = '';
         
         dataRef.once('value')
-            .then(snapshot => {
+           .then(snapshot => {
                 const data = snapshot.val();
                 let found = false;
                 if (data) {
@@ -368,7 +524,7 @@
                             lookupResult.innerHTML = `
                                 <strong>Kết quả:</strong>
                                 <br>
-                                <p><strong>Ngày:</strong> ${formatDate(entry.date)}</p>
+                                <p><strong>Ngày:</strong> ${entry.date}</p>
                                 <p><strong>Địa điểm:</strong> ${entry.location}</p>
                             `;
                             lookupResult.classList.remove('hidden');
@@ -383,12 +539,13 @@
                     lookupError.classList.remove('hidden');
                 }
             })
-            .catch(error => {
+           .catch(error => {
                 lookupError.textContent = 'Lỗi khi tra cứu dữ liệu: ' + error.message;
                 lookupError.classList.remove('hidden');
                 console.error('Lỗi khi tra cứu:', error);
             });
     });
+
 </script>
 
 </body>
