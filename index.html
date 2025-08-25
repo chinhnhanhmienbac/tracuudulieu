@@ -138,6 +138,13 @@
             border-radius: 5px;
             background-color: #f9f9f9;
         }
+        
+        #import-excel-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px dashed #ccc;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
@@ -201,6 +208,16 @@
             <button id="logout-button">Đóng phần nhập liệu</button>
         </div>
         <div id="save-status" class="status-message"></div>
+        
+        <div id="import-excel-section">
+            <h3>Nhập dữ liệu từ Excel</h3>
+            <div class="form-group">
+                <label for="import-file-input">Chọn file Excel/CSV:</label>
+                <input type="file" id="import-file-input" accept=".xlsx, .xls, .csv">
+            </div>
+            <button id="import-button">Nhập từ file</button>
+            <div id="import-status" class="status-message"></div>
+        </div>
     </div>
     
     <div id="edit-data-section" class="section hidden">
@@ -268,6 +285,11 @@
     const editDateInput = document.getElementById('edit-date-input');
     const editListContainer = document.getElementById('edit-list-container');
     const editStatus = document.getElementById('edit-status');
+    
+    // Thêm các element mới cho chức năng nhập Excel
+    const importFileInput = document.getElementById('import-file-input');
+    const importButton = document.getElementById('import-button');
+    const importStatus = document.getElementById('import-status');
 
     // Hàm ẩn/hiện các phần
     function showLogin() {
@@ -290,6 +312,7 @@
         endSerialInput.value = '';
         locationInput.value = '';
         saveStatus.textContent = '';
+        importStatus.textContent = '';
     }
     
     function showEditData() {
@@ -353,6 +376,101 @@
 
     // Sự kiện quay lại từ trang chỉnh sửa
     backToDataEntryButton.addEventListener('click', showDataEntry);
+    
+    // Hàm xử lý và định dạng ngày tháng từ Excel
+    function formatDateFromExcel(excelDate) {
+        if (typeof excelDate === 'number') {
+            // Trường hợp ngày được lưu dưới dạng số trong Excel
+            const date = XLSX.SSF.parse_date_code(excelDate);
+            return `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;
+        } else if (typeof excelDate === 'string') {
+            // Trường hợp ngày được lưu dưới dạng chuỗi dd/mm/yyyy
+            const parts = excelDate.split('/');
+            if (parts.length === 3) {
+                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+        }
+        return ''; // Trả về chuỗi rỗng nếu không phải định dạng hợp lệ
+    }
+    
+    // Sự kiện nhập từ Excel
+    importButton.addEventListener('click', () => {
+        const file = importFileInput.files[0];
+        if (!file) {
+            importStatus.textContent = 'Vui lòng chọn một file.';
+            importStatus.style.color = '#f44336';
+            return;
+        }
+
+        importStatus.textContent = 'Đang đọc file và nhập dữ liệu...';
+        importStatus.style.color = '#3498db';
+
+        const reader = new FileReader();
+        const fileName = file.name.toLowerCase();
+
+        reader.onload = function(e) {
+            try {
+                let jsonData = [];
+                if (fileName.endsWith('.csv')) {
+                    const csvText = e.target.result;
+                    jsonData = XLSX.utils.sheet_to_json(XLSX.utils.csv_to_sheet(csvText), { header: 1, raw: true });
+                } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array', cellDates: true});
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true });
+                } else {
+                    importStatus.textContent = 'Định dạng file không được hỗ trợ. Vui lòng chọn file Excel (.xlsx, .xls) hoặc CSV (.csv).';
+                    importStatus.style.color = '#f44336';
+                    return;
+                }
+
+                let entries = [];
+                if (jsonData.length > 1) {
+                    for (let i = 1; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        if (row.length >= 4) {
+                            const date = formatDateFromExcel(row[0]);
+                            const start = parseInt(row[1], 10);
+                            const end = parseInt(row[2], 10);
+                            const location = row[3];
+                            
+                            if (date && !isNaN(start) && !isNaN(end) && location) {
+                                entries.push({
+                                    date: date,
+                                    start: start,
+                                    end: end,
+                                    location: location
+                                });
+                            }
+                        }
+                    }
+                }
+                
+                if (entries.length > 0) {
+                    entries.forEach(entry => {
+                        dataRef.push(entry);
+                    });
+                    importStatus.textContent = `Đã nhập thành công ${entries.length} bản ghi!`;
+                    importStatus.style.color = '#27ae60';
+                } else {
+                    importStatus.textContent = 'Không tìm thấy dữ liệu hợp lệ trong file.';
+                    importStatus.style.color = '#f44336';
+                }
+            } catch (error) {
+                importStatus.textContent = 'Lỗi khi xử lý file: ' + error.message;
+                importStatus.style.color = '#f44336';
+                console.error('Lỗi khi nhập:', error);
+            }
+        };
+
+        if (fileName.endsWith('.csv')) {
+            reader.readAsText(file);
+        } else {
+            reader.readAsArrayBuffer(file);
+        }
+    });
 
     // Sự kiện lưu dữ liệu
     saveButton.addEventListener('click', () => {
@@ -406,9 +524,9 @@
     // Hàm định dạng ngày tháng sang dd/mm/yyyy
     function formatDateForExcel(dateString) {
         if (!dateString) return '';
-        const date = new Date(dateString + 'T00:00:00'); // Add T00:00:00 to avoid timezone issues
+        const date = new Date(dateString + 'T00:00:00'); 
         const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+        const month = String(date.getMonth() + 1).padStart(2, '0'); 
         const year = date.getFullYear();
         return `${day}/${month}/${year}`;
     }
