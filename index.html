@@ -30,6 +30,13 @@
             text-align: center;
         }
 
+        .logo {
+            display: block;
+            margin: 0 auto 20px;
+            max-width: 50%;
+            height: auto;
+        }
+
         h1, h2 {
             color: #2c3e50;
             margin-bottom: 20px;
@@ -83,6 +90,14 @@
         button#delete-button:hover {
             background-color: #c0392b;
         }
+        
+        button#edit-button {
+            background-color: #f39c12;
+        }
+
+        button#edit-button:hover {
+            background-color: #e67e22;
+        }
 
         button:hover {
             background-color: #2980b9;
@@ -116,16 +131,19 @@
             color: #27ae60;
         }
 
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-            }
+        .editable-item {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <img src="https://pvgaslpg.com.vn/uploads/LPG%20xanh%20animation.gif" alt="PVGas LPG Logo" class="logo">
     <h1>TRA CỨU NGÀY NẠP CHAI THEO TEM CHỐNG GIẢ</h1>
     
     <div id="lookup-section" class="section">
@@ -178,9 +196,25 @@
             <button id="export-button">Xuất ra Excel</button>
             <button id="delete-button">Xóa toàn bộ dữ liệu</button>
         </div>
-        <button id="logout-button">Đóng phần nhập liệu</button>
+        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+            <button id="edit-button">Chỉnh sửa dữ liệu</button>
+            <button id="logout-button">Đóng phần nhập liệu</button>
+        </div>
         <div id="save-status" class="status-message"></div>
     </div>
+    
+    <div id="edit-data-section" class="section hidden">
+        <h2>Chỉnh Sửa Dữ Liệu</h2>
+        <div class="form-group">
+            <label for="edit-date-input">Chọn ngày cần chỉnh sửa:</label>
+            <input type="date" id="edit-date-input">
+        </div>
+        <button id="search-edit-button">Tìm dữ liệu</button>
+        <div id="edit-list-container"></div>
+        <div id="edit-status" class="status-message"></div>
+        <button id="back-to-data-entry-button" style="margin-top: 20px;">Quay lại</button>
+    </div>
+
 </div>
 
 <script>
@@ -205,13 +239,17 @@
     const loginSection = document.getElementById('login-section');
     const dataEntrySection = document.getElementById('data-entry-section');
     const lookupSection = document.getElementById('lookup-section');
+    const editDataSection = document.getElementById('edit-data-section');
     const openDataEntryButton = document.getElementById('open-data-entry-button');
     const loginButton = document.getElementById('login-button');
     const logoutButton = document.getElementById('logout-button');
     const saveButton = document.getElementById('save-button');
     const exportButton = document.getElementById('export-button');
-    const deleteButton = document.getElementById('delete-button'); // Nút xóa mới
+    const deleteButton = document.getElementById('delete-button'); 
+    const editButton = document.getElementById('edit-button'); 
     const lookupButton = document.getElementById('lookup-button');
+    const searchEditButton = document.getElementById('search-edit-button');
+    const backToDataEntryButton = document.getElementById('back-to-data-entry-button');
 
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
@@ -227,11 +265,16 @@
     const lookupResult = document.getElementById('lookup-result');
     const lookupError = document.getElementById('lookup-error');
 
+    const editDateInput = document.getElementById('edit-date-input');
+    const editListContainer = document.getElementById('edit-list-container');
+    const editStatus = document.getElementById('edit-status');
+
     // Hàm ẩn/hiện các phần
     function showLogin() {
         loginSection.classList.remove('hidden');
         dataEntrySection.classList.add('hidden');
         lookupSection.classList.add('hidden');
+        editDataSection.classList.add('hidden');
         openDataEntryButton.classList.add('hidden');
     }
 
@@ -239,6 +282,7 @@
         loginSection.classList.add('hidden');
         dataEntrySection.classList.remove('hidden');
         lookupSection.classList.add('hidden');
+        editDataSection.classList.add('hidden');
         openDataEntryButton.classList.add('hidden');
         // Reset form
         dateInput.value = '';
@@ -247,11 +291,24 @@
         locationInput.value = '';
         saveStatus.textContent = '';
     }
+    
+    function showEditData() {
+        loginSection.classList.add('hidden');
+        dataEntrySection.classList.add('hidden');
+        lookupSection.classList.add('hidden');
+        editDataSection.classList.remove('hidden');
+        openDataEntryButton.classList.add('hidden');
+        // Clear edit form
+        editDateInput.value = '';
+        editListContainer.innerHTML = '';
+        editStatus.textContent = '';
+    }
 
     function showLookup() {
         loginSection.classList.add('hidden');
         dataEntrySection.classList.add('hidden');
         lookupSection.classList.remove('hidden');
+        editDataSection.classList.add('hidden');
         openDataEntryButton.classList.remove('hidden');
         // Clear result
         lookupResult.classList.add('hidden');
@@ -283,6 +340,19 @@
     logoutButton.addEventListener('click', () => {
         showLookup();
     });
+
+    // Sự kiện mở phần chỉnh sửa dữ liệu
+    editButton.addEventListener('click', () => {
+        const editPassword = prompt('Nhập mật khẩu để chỉnh sửa dữ liệu:');
+        if (editPassword === '13579') {
+            showEditData();
+        } else {
+            alert('Mật khẩu không chính xác. Không thể chỉnh sửa dữ liệu.');
+        }
+    });
+
+    // Sự kiện quay lại từ trang chỉnh sửa
+    backToDataEntryButton.addEventListener('click', showDataEntry);
 
     // Sự kiện lưu dữ liệu
     saveButton.addEventListener('click', () => {
@@ -350,7 +420,7 @@
                 const data = snapshot.val();
                 if (data) {
                     const entries = Object.values(data).map(item => ({
-                        'Ngày': formatDateForExcel(item.date), // Định dạng ngày tháng
+                        'Ngày': formatDateForExcel(item.date), 
                         'Số bắt đầu': item.start,
                         'Số kết thúc': item.end,
                         'Địa điểm': item.location
@@ -420,6 +490,92 @@
                 lookupError.textContent = 'Lỗi khi tra cứu dữ liệu: ' + error.message;
                 lookupError.classList.remove('hidden');
                 console.error('Lỗi khi tra cứu:', error);
+            });
+    });
+    
+    // Sự kiện tìm kiếm dữ liệu để chỉnh sửa
+    searchEditButton.addEventListener('click', () => {
+        const dateToEdit = editDateInput.value;
+        if (!dateToEdit) {
+            editStatus.textContent = 'Vui lòng chọn ngày để tìm kiếm.';
+            editStatus.style.color = '#f44336';
+            return;
+        }
+        
+        editListContainer.innerHTML = '';
+        editStatus.textContent = '';
+        
+        dataRef.orderByChild('date').equalTo(dateToEdit).once('value')
+            .then(snapshot => {
+                const data = snapshot.val();
+                if (data) {
+                    editStatus.textContent = 'Đã tìm thấy dữ liệu. Hãy chỉnh sửa và lưu lại.';
+                    editStatus.style.color = '#27ae60';
+                    for (let key in data) {
+                        const entry = data[key];
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'editable-item';
+                        itemDiv.innerHTML = `
+                            <p><strong>Ngày:</strong> ${entry.date}</p>
+                            <div class="form-group">
+                                <label>Số bắt đầu:</label>
+                                <input type="number" class="edit-start" value="${entry.start}">
+                            </div>
+                            <div class="form-group">
+                                <label>Số kết thúc:</label>
+                                <input type="number" class="edit-end" value="${entry.end}">
+                            </div>
+                            <div class="form-group">
+                                <label>Địa điểm:</label>
+                                <input type="text" class="edit-location" value="${entry.location}">
+                            </div>
+                            <button class="save-edit-button" data-key="${key}">Lưu thay đổi</button>
+                        `;
+                        editListContainer.appendChild(itemDiv);
+                    }
+                    
+                    document.querySelectorAll('.save-edit-button').forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            const key = e.target.getAttribute('data-key');
+                            const parentDiv = e.target.parentElement;
+                            const newStart = parseInt(parentDiv.querySelector('.edit-start').value, 10);
+                            const newEnd = parseInt(parentDiv.querySelector('.edit-end').value, 10);
+                            const newLocation = parentDiv.querySelector('.edit-location').value;
+
+                            if (!isNaN(newStart) && !isNaN(newEnd) && newLocation) {
+                                const updates = {};
+                                updates['/' + key] = {
+                                    date: dateToEdit,
+                                    start: newStart,
+                                    end: newEnd,
+                                    location: newLocation
+                                };
+
+                                dataRef.update(updates)
+                                    .then(() => {
+                                        editStatus.textContent = 'Cập nhật thành công!';
+                                        editStatus.style.color = '#27ae60';
+                                    })
+                                    .catch(error => {
+                                        editStatus.textContent = 'Lỗi khi cập nhật: ' + error.message;
+                                        editStatus.style.color = '#f44336';
+                                    });
+                            } else {
+                                editStatus.textContent = 'Vui lòng điền đầy đủ thông tin để lưu.';
+                                editStatus.style.color = '#f44336';
+                            }
+                        });
+                    });
+
+                } else {
+                    editStatus.textContent = 'Không tìm thấy dữ liệu nào cho ngày này.';
+                    editStatus.style.color = '#f44336';
+                }
+            })
+            .catch(error => {
+                editStatus.textContent = 'Lỗi khi tìm kiếm dữ liệu: ' + error.message;
+                editStatus.style.color = '#f44336';
+                console.error('Lỗi khi tìm kiếm:', error);
             });
     });
 
